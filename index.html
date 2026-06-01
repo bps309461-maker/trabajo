@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<!--
+Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+Click nbfs://nbhost/SystemFileSystem/Templates/Other/html.html to edit this template
+-->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Quiz — Probabilidad y Estadística (Basado en Apuntes de Clase)</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#f4f4f5;color:#111;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:2rem 1rem}
+.container{max-width:620px;width:100%}
+.progress-track{height:6px;background:#e0e0e0;border-radius:99px;margin-bottom:1.5rem;overflow:hidden}
+.progress-fill{height:100%;background:#1D9E75;border-radius:99px;transition:width .4s ease}
+.topic-badge{display:inline-block;font-size:11px;font-weight:500;padding:3px 10px;border-radius:99px;background:#E1F5EE;color:#0F6E56;border:.5px solid #5DCAA5;margin-bottom:.75rem}
+.q-count{font-size:13px;color:#666;margin-bottom:.4rem}
+.q-text{font-size:17px;font-weight:500;margin-bottom:1.5rem;line-height:1.55}
+.options{display:flex;flex-direction:column;gap:10px}
+.opt-btn{display:flex;align-items:center;gap:12px;background:#fff;border:.5px solid #ccc;border-radius:12px;padding:.85rem 1rem;cursor:pointer;text-align:left;font-size:14px;color:#111;transition:background .15s,border-color .15s;width:100%;font-family:inherit}
+.opt-btn:hover:not(:disabled){background:#f0f0f0;border-color:#aaa}
+.opt-btn .ltr{width:30px;height:30px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;background:#f0f0f0;color:#555;border:.5px solid #ddd;transition:background .15s,color .15s}
+.opt-btn.correct{background:#EAF3DE;border-color:#639922}
+.opt-btn.correct .ltr{background:#639922;color:#fff;border-color:#639922}
+.opt-btn.wrong{background:#FCEBEB;border-color:#E24B4A}
+.opt-btn.wrong .ltr{background:#E24B4A;color:#fff;border-color:#E24B4A}
+.opt-btn:disabled{cursor:default}
+.feedback{margin-top:1rem;padding:.75rem 1rem;border-radius:8px;font-size:13px;display:none;flex-direction:column;gap:4px;line-height:1.5}
+.feedback.show{display:flex}
+.feedback.ok{background:#EAF3DE;color:#3B6D11;border:.5px solid #639922}
+.feedback.fail{background:#FCEBEB;color:#A32D2D;border:.5px solid #E24B4A}
+.feedback .fb-t{font-weight:500}
+.feedback .fb-e{opacity:.85;font-size:12px}
+.results{text-align:center;padding:1rem 0}
+.results h2{font-size:22px;font-weight:500;margin-bottom:.5rem}
+.results .sub{font-size:15px;color:#666;margin-bottom:2rem}
+.score-circle{width:120px;height:120px;border-radius:50%;background:#E1F5EE;border:4px solid #1D9E75;display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 2rem}
+.score-circle .num{font-size:32px;font-weight:500;color:#0F6E56}
+.score-circle .lbl{font-size:12px;color:#0F6E56}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:2rem}
+.stat-card  .val{font-size:24px;font-weight:500;margin-bottom:4px}
+.stat-card  .lbl{font-size:12px;color:#666}
+.stat-card.c .val{color:#3B6D11}
+.stat-card.w .val{color:#A32D2D}
+.stat-card.p .val{color:#0F6E56}
+.topic-breakdown{text-align:left;margin-bottom:2rem}
+.topic-breakdown h3{font-size:14px;font-weight:500;color:#666;margin-bottom:.75rem}
+.topic-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:12px}
+.topic-row .tn{flex:1;color:#111}
+.topic-row .track{flex:1.5;height:6px;background:#e0e0e0;border-radius:99px;overflow:hidden}
+.topic-row .fill{height:100%;border-radius:99px;background:#1D9E75}
+.topic-row .fill.fail{background:#E24B4A}
+.topic-row .sc{min-width:36px;text-align:right;color:#666}
+.retry-btn{padding:.75rem 2rem;border-radius:12px;background:#1D9E75;color:#fff;border:none;font-size:15px;font-weight:500;cursor:pointer;transition:opacity .15s;font-family:inherit}
+.retry-btn:hover{opacity:.88}
+.medal{font-size:48px;margin-bottom:.5rem}
+</style>
+</head>
+<body>
+<div class="container">
+  <div id="quiz-view">
+    <div class="progress-track"><div class="progress-fill" id="progress"></div></div>
+    <div class="topic-badge" id="q-topic"></div>
+    <div class="q-count" id="q-count"></div>
+    <div class="q-text" id="q-text"></div>
+    <div class="options" id="options"></div>
+    <div class="feedback" id="feedback"></div>
+  </div>
+  <div id="results-view" style="display:none">
+    <div class="results">
+      <div class="medal" id="medal"></div>
+      <h2 id="res-title"></h2>
+      <p class="sub" id="res-sub"></p>
+      <div class="score-circle">
+        <span class="num" id="res-pct"></span>
+        <span class="lbl">aciertos</span>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card c"><div class="val" id="res-c"></div><div class="lbl">✓ Correctas</div></div>
+        <div class="stat-card w"><div class="val" id="res-w"></div><div class="lbl">✗ Incorrectas</div></div>
+        <div class="stat-card p"><div class="val" id="res-t"></div><div class="lbl">Total</div></div>
+      </div>
+      <div class="topic-breakdown">
+        <h3>Resultado por tema</h3>
+        <div id="topic-rows"></div>
+      </div>
+      <button class="retry-btn" onclick="restartQuiz()">↺ Nuevo intento (15 aleatorias)</button>
+    </div>
+  </div>
+</div>
+<script>
+const BANK = [
+  // TEMA 1: CONCEPTOS BÁSICOS (Extraídos directamente del PDF apuntes pág. 1-3)
+  {t:"Conceptos Básicos",q:"Según los apuntes de clase, ¿cuál es el objetivo primordial de la estadística descriptiva?",o:["Recolectar, organizar, resumir y presentar un conjunto de datos para describir sus características principales, sin intentar extraer conclusiones generalizadas","Predecir eventos futuros en base a una muestra selectiva utilizando algoritmos de Machine Learning","Calcular la probabilidad exacta de ocurrencia de fallas críticas de red por año","Demostrar teoremas matemáticos complejos utilizando sistemas de ecuaciones lineales"],a:0,e:"Tus apuntes de la pág. 1 dicen textualmente: 'Sirve para entender datos, no predicciones'."},
+  {t:"Conceptos Básicos",q:"De acuerdo al diagrama del PDF, ¿cuál es el orden correcto de los pasos lógicos para procesar la información obtenida de una muestra?",o:["1. Obtener la muestra -> 2. Clasificar, agrupar, ordenar -> 3. Tabular-Graficar -> 4. Cálculo y Resumir","1. Cálculo y Resumir -> 2. Tabular-Graficar -> 3. Clasificar -> 4. Obtener muestra","1. Tabular-Graficar -> 2. Obtener muestra -> 3. Cálculo -> 4. Clasificar","1. Obtener muestra -> 2. Calcular -> 3. Graficar -> 4. Clasificar"],a:0,e:"En la pág. 1 de tus apuntes se esquematiza esta secuencia numérica precisa para el análisis de frecuencias."},
+  {t:"Conceptos Básicos",q:"¿Cómo definen tus apuntes a los 'Datos no agrupados'?",o:["Son el conjunto de datos obtenidos tal cual, sin ningún orden específico o clasificados en categorías, empleados generalmente cuando la muestra es pequeña","Son datos estructurados en bases de datos relacionales SQL con llaves primarias","Son datos numéricos que únicamente toman valores racionales y enteros negativos","Son valores organizados estrictamente en rangos o intervalos de clase prefijados"],a:0,e:"Pág. 10 de tus notas: 'Datos no agrupados: son el conjunto de datos obtenidos tal cual... se usan generalmente cuando la muestra es pequeña'."},
+  {t:"Conceptos Básicos",q:"¿Qué es un 'Dato agrupado' según la definición explícita en tu material?",o:["Datos organizados en rangos o intervalos bien definidos (clases), utilizados comúnmente cuando la muestra contiene una gran cantidad de elementos","Cualquier cadena de texto sin procesar recopilada directamente por un script de logs","El promedio exacto de las edades de los alumnos de un grupo","Cualquier variable cualitativa nominal que no se puede cuantificar numéricamente"],a:0,e:"Pág. 10 de tus notas: 'Datos agrupados: Datos organizados en rangos o intervalos...'."},
+
+  // TEMA 2: REGLA DE STURGES Y CLASES (Basado en fórmulas de tus apuntes pág. 9-10)
+  {t:"Regla de Sturges y Clases",q:"¿Qué fórmula matemática se muestra en las anotaciones para calcular el número ideal de intervalos (K) dado un total N de observaciones?",o:["K = 1 + 3.322 · log10(N)","K = N / 3.322","K = 1 - log2(N)","K = √(N) · 3.322"],a:0,e:"Fórmula explícita de tus apuntes: 'K = 1 + 3.322 Log10(N)', usada para determinar el número de filas en tablas de frecuencias."},
+  {t:"Regla de Sturges y Clases",q:"Al construir intervalos como '72.4 - 72.7' observados en las tablas del PDF, ¿cómo se le conoce al valor central o promedio de dicho rango (ej. 72.55)?",o:["Punto Medio o Marca de Clase","Frecuencia Relativa Acumulada","Límite de Clase Superior","Ancho de banda del intervalo"],a:0,e:"El PDF detalla explícitamente en sus columnas el encabezado 'Punto Medio' para hacer referencia al centro de los límites de clase."},
+  {t:"Regla de Sturges y Clases",q:"Si en una tabla de frecuencias del PDF la suma total de observaciones (N) es 15, y un intervalo tiene una frecuencia absoluta de 5, ¿cuál es su Frecuencia Relativa?",o:["0.333 (o 33.33%)","5.0","0.15","0.75"],a:0,e:"Fórmula anotada en tu PDF: 'Frecuencia Relativa = f / N'. En el ejemplo escrito a mano: 5 / 15 = 0.3333 (33.33%)."},
+  {t:"Regla de Sturges y Clases",q:"¿Qué nombre reciben los extremos que definen cada renglón de la tabla (como el izquierdo y el derecho en '73.0 - 73.3')?",o:["Límites de clase (Inferior y Superior)","Puntos medios asintóticos","Frecuencias de clase relativas","Intervalos de confianza estocásticos"],a:0,e:"La columna del PDF los etiqueta explícitamente como 'Límites de clase (Inferior y Superior)'."},
+
+  // TEMA 3: MEDIDAS DE TENDENCIA CENTRAL Y DISPERSIÓN (Conceptos clave del cuaderno)
+  {t:"Medidas Estadísticas",q:"¿Cómo describe tu cuaderno de forma resumida e informal a la 'Moda'?",o:["Es la que más se repite","Es el promedio aritmético exacto de la muestra","Es el valor que divide la muestra en 50% y 50%","Es la raíz cuadrada de la varianza total"],a:0,e:"Nota textual al pie de la página de tus apuntes: 'Moda es la que más se repite'."},
+  {t:"Medidas Estadísticas",q:"Al interpretar datos numéricos crudos de un sistema informático, ¿cuáles son los tres resúmenes numéricos de tendencia central mencionados en los mapas de tus apuntes?",o:["Medias, modas y medianas","Desviaciones, varianzas y rangos","Histogramas, gráficas y barras","Muestras, poblaciones y parámetros"],a:0,e:"En el mapa conceptual de la pág. 1 se divide la interpretación mediante resúmenes numéricos de tendencia central (medias, modas, mediana)."},
+  {t:"Medidas Estadísticas",q:"En la estructura lógica expuesta, las medidas de dispersión se encargan de resumir de manera numérica:",o:["Qué tan parecidos o qué tan distintos son los datos entre sí (variabilidad)","El total absoluto de datos recolectados en el script de muestreo","La probabilidad acumulada de que una variable tome un valor idéntico a la moda","Las categorías cualitativas nominales de la población objetivo"],a:0,e:"Pág. 1: Explica el ejemplo de las edades para entender si los datos son muy parecidos o muy distintos (dispersión)."},
+
+  // TEMA 4: APLICACIONES DE SISTEMAS Y PROBABILIDAD (Sistemas Computacionales)
+  {t:"Aplicaciones en Sistemas",q:"¿Por qué es fundamental la distinción entre datos agrupados y no agrupados al desarrollar un software de analítica de datos?",o:["Porque los algoritmos para calcular la mediana y media difieren completamente si los datos se procesan individualmente o mediante rangos de frecuencias","Porque las bases de datos SQL no permiten almacenar datos flotantes continuos","Porque los datos no agrupados consumen siempre el doble de memoria RAM en el servidor","Porque la regla de Sturges solo compila en lenguajes de programación estructurados como C"],a:0,e:"En programación, calcular estadísticas sobre arreglos puros (no agrupados) requiere funciones simples, mientras que procesar tablas agrupadas por intervalos requiere iterar sobre puntos medios y frecuencias ponderadas."},
+  {t:"Aplicaciones en Sistemas",q:"Si automatizamos el cálculo del número de clases (K) en Python para un set de logs con N=100 registros usando la fórmula de Sturges de tus apuntes, el valor de log10(100) es 2. ¿Cuánto vale K?",o:["7.644 (aproximadamente 8 clases)","10 clases","5 clases","3.322 clases"],a:0,e:"K = 1 + 3.322 · log10(100) => K = 1 + 3.322 · (2) = 1 + 6.644 = 7.644."},
+  {t:"Aplicaciones en Sistemas",q:"¿Qué tipo de gráfico del que se menciona en los apuntes ('Tabular-Graficar') mapea barras verticales unidas para representar la distribución de datos agrupados continuos?",o:["Histograma de frecuencias","Diagrama de Venn condicional","Gráfica de dispersión de puntos","Gráfico de pastel o sectores"],a:0,e:"Los histogramas representan intervalos contiguos (límites de clase), ideal para el flujo secuencial de datos agrupados."},
+  {t:"Aplicaciones en Sistemas",q:"Cuando tus apuntes mencionan el concepto de 'Estadística de Muestreo (Pasos)', en ingeniería en sistemas equivale a:",o:["Diseñar rutinas que seleccionen registros o paquetes de red representativos para monitorear el rendimiento sin saturar la base de datos","Copiar la totalidad de los datos de producción directamente al entorno local de desarrollo","Eliminar todos los valores atípicos que arrojen errores en la consola del compilador","Ejecutar pruebas unitarias de software sobre el 100% de los servidores simultáneamente"],a:0,e:"El muestreo es crucial en sistemas para analizar rendimiento de redes y logs mediante porciones de datos eficientes y manejables."}
+];
+
+const LETTERS = ['A','B','C','D'];
+const PER_ROUND = 15;
+let session=[], cur=0, correct=0, answered=false, topicScore={};
+
+function shuffle(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+
+function initRound(){
+  // Toma las preguntas basadas exactamente en el PDF y el entorno de sistemas
+  const qs = shuffle(BANK).slice(0,PER_ROUND);
+  
+  session = qs.map(q => {
+    const correct_text = q.o[q.a];
+    const shuffled = shuffle(q.o);
+    const new_ans = shuffled.indexOf(correct_text);
+    return {...q, o: shuffled, a: new_ans};
+  });
+  
+  cur=0; correct=0; answered=false; topicScore={};
+  session.forEach(q=>{if(!topicScore[q.t])topicScore[q.t]={c:0,t:0};topicScore[q.t].t++;});
+  load();
+}
+
+function load(){
+  const q=session[cur];
+  document.getElementById('progress').style.width=((cur/PER_ROUND)*100)+'%';
+  document.getElementById('q-topic').textContent=q.t;
+  document.getElementById('q-count').textContent=`Pregunta ${cur+1} de ${PER_ROUND}`;
+  document.getElementById('q-text').textContent=q.q;
+  const opts=document.getElementById('options');
+  opts.innerHTML='';
+  
+  q.o.forEach((o,i)=>{
+    const btn=document.createElement('button');
+    btn.className='opt-btn';
+    btn.innerHTML=`<span class="ltr">${LETTERS[i]}</span><span>${o}</span>`;
+    btn.onclick=()=>pick(i);
+    opts.appendChild(btn);
+  });
+  
+  document.getElementById('feedback').className='feedback';
+  document.getElementById('feedback').innerHTML='';
+  answered=false;
+  clearTimeout(window._auto);
+}
+
+function pick(i){
+  if(answered)return;
+  answered=true;
+  const q=session[cur];
+  const btns=document.querySelectorAll('.opt-btn');
+  btns.forEach(b=>b.disabled=true);
+  const fb=document.getElementById('feedback');
+  
+  if(i===q.a){
+    correct++;
+    topicScore[q.t].c++;
+    btns[i].classList.add('correct');
+    fb.className='feedback ok show';
+    fb.innerHTML=`<div class="fb-t">✓ ¡Correcto!</div><div class="fb-e">${q.e}</div>`;
+  } else {
+    btns[i].classList.add('wrong');
+    btns[q.a].classList.add('correct');
+    fb.className='feedback fail show';
+    fb.innerHTML=`<div class="fb-t">✗ Incorrecto — la respuesta era ${LETTERS[q.a]}</div><div class="fb-e">${q.e}</div>`;
+  }
+  
+  window._auto=setTimeout(()=>{cur++;if(cur<PER_ROUND)load();else showResults();},3500);
+}
+
+function showResults(){
+  document.getElementById('quiz-view').style.display='none';
+  document.getElementById('results-view').style.display='block';
+  const pct=Math.round((correct/PER_ROUND)*100);
+  document.getElementById('res-c').textContent=correct;
+  document.getElementById('res-w').textContent=PER_ROUND-correct;
+  document.getElementById('res-t').textContent=PER_ROUND;
+  document.getElementById('res-pct').textContent=pct+'%';
+  let medal,title,sub;
+  
+  if(pct===100){medal='📝';title='¡Examen Perfecto!';sub='Dominas perfectamente los conceptos, fórmulas y tablas de tus apuntes del PDF.';}
+  else if(pct>=80){medal='🥇';title='¡Excelente puntuación!';sub='Muy buen entendimiento de la regla de Sturges, datos agrupados y descriptiva.';}
+  else if(pct>=60){medal='🥈';title='Vas por buen camino';sub='Aprobado. Dale una breve leída a las páginas 1 y 10 de tu PDF para asegurar el 100%.';}
+  else{medal='📖';title='A repasar las láminas';sub='Revisa los conceptos de datos agrupados y las fórmulas de frecuencias escritas en las hojas.';}
+  
+  document.getElementById('medal').textContent=medal;
+  document.getElementById('res-title').textContent=title;
+  document.getElementById('res-sub').textContent=sub;
+  
+  const rows=document.getElementById('topic-rows');
+  rows.innerHTML='';
+  Object.entries(topicScore).forEach(([t,s])=>{
+    const p=Math.round((s.c/s.t)*100);
+    rows.innerHTML+=`<div class="topic-row"><div class="tn">${t}</div><div class="track"><div class="fill${p<50?' fail':''}" style="width:${p}%"></div></div><div class="sc">${s.c}/${s.t}</div></div>`;
+  });
+}
+
+function restartQuiz(){
+  document.getElementById('results-view').style.display='none';
+  document.getElementById('quiz-view').style.display='block';
+  initRound();
+}
+
+initRound();
+</script>
+</body>
+</html>
